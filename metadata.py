@@ -59,7 +59,7 @@ class Metadata(object):
             val = self.exif[item]
             if index is not None:
                 try:
-                    if isinstance(val, unicode):
+                    if isinstance(val, str):
                         val = val.encode('ascii','ignore')
                 except NameError:
                     #throws on python 3 where unicode is undefined
@@ -81,7 +81,7 @@ class Metadata(object):
         '''get the size (length) of a metadata item'''
         val = self.get_item(item)
         try:
-            if isinstance(val, unicode):
+            if isinstance(val, str):
                 val = val.encode('ascii','ignore')
         except NameError:
             #throws on python 3 where unicode is undefined
