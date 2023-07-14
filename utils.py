@@ -56,7 +56,7 @@ def raw_image_to_radiance(meta, imageRaw):
     R = 1.0 / (1.0 + a2 * y / exposureTime - a3 * y)
 
     # subtract the dark level and adjust for vignette and row gradient
-    L = V * R * (imageRaw - darkLevel)
+    L = V * R * (imageRaw) # - darkLevel)
 
     # Floor any negative radiances to zero (can happend due to noise around blackLevel)
     L[L < 0] = 0
@@ -73,7 +73,7 @@ def raw_image_to_radiance(meta, imageRaw):
 
     # return both the radiance compensated image and the DN corrected image, for the
     # sake of the tutorial and visualization
-    return radianceImage.T, L.T, V.T, R.T
+    return radianceImage.T
 
 
 def vignette_map(meta, xDim, yDim):

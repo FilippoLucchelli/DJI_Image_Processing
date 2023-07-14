@@ -7,10 +7,8 @@ import math
 import metadata
 import utils
 
-def raw2reflectance(path):
+def undistort(path, meta):
     raw_img=plt.imread(path)
-    meta=metadata.Metadata(path)
-
     BlackLevel=meta.get_item("EXIF:BlackLevel")
     VignettingData_string=meta.get_item("XMP:VignettingData")
     VD=[float(VignettingData_string.split(',')[i]) for i in range(6)]
@@ -24,19 +22,31 @@ def raw2reflectance(path):
     ValGain=meta.get_item("XMP:SensorGain")
     ValETime=meta.get_item("XMP:ExposureTime")/1e6
     PCam=meta.get_item("XMP:SensorGainAdjustment")
+
+    #norm_img=(raw_img-BlackLevel)/65535
+    undistorted_img=cv2.undistort(raw_img, CameraMatrix, DistCoeff)
+    
+
+    return undistorted_img
+
+def compute_reflectance(meta, image):
     Irradiance=meta.get_item("XMP:Irradiance")
 
-    norm_img=(raw_img-BlackLevel)/65535
-    undistorted_img=cv2.undistort(norm_img, CameraMatrix, DistCoeff)
-    img_camera=undistorted_img/(ValGain*ValETime)
-    img_ref=img_camera*(PCam/Irradiance)
+    radiance=utils.raw_image_to_radiance(meta, image)
+    reflectance=radiance/Irradiance
 
-    return img_ref, undistorted_img
+    return reflectance
 
-def vignette_correction(norm_img, CenterX, CenterY, DD):
-    corrected_img=np.zeros_like(norm_img)
-    for x in range(norm_img.shape[1]):
-        for y in range(norm_img.shape[0]):
-            r=math.sqrt((x - CenterX)**2 + (y - CenterY)**2)
-            corrected_img[y,x]=norm_img[y,x]*(DD[5]*(r**6) + DD[4]*(r**5) + DD[3]*(r**4) + DD[2]*(r**3) + DD[1]*(r**2) + DD[0]*(r**1) + 1)
-    return corrected_img
+class VegetationIndices:
+    def __init__(self, red, green, blue, nir):
+        self.red=red
+        self.green=green
+        self.blue=blue
+        self.nir=nir
+
+    def compute_ndvi(self):
+        return (self.nir-self.red)/(self.nir+self.red)
+    
+    def compute_evi(self):
+        return 2.5*(self.nir-self.red)/(self.nir+6*self.red-7.5*self.blue+1)
+    
