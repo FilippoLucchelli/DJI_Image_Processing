@@ -9,6 +9,7 @@ import utils
 
 def undistort(path, meta):
     raw_img=plt.imread(path)
+    
     BlackLevel=meta.get_item("EXIF:BlackLevel")
     VignettingData_string=meta.get_item("XMP:VignettingData")
     VD=[float(VignettingData_string.split(',')[i]) for i in range(6)]
