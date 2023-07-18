@@ -56,11 +56,11 @@ def raw_image_to_radiance(meta, imageRaw):
     R = 1.0 / (1.0 + a2 * y / exposureTime - a3 * y)
 
     # subtract the dark level and adjust for vignette and row gradient
-    L = V * R * (imageRaw) # - darkLevel)
+    L = (V * R * (imageRaw- darkLevel))
 
     # Floor any negative radiances to zero (can happend due to noise around blackLevel)
     L[L < 0] = 0
-
+    
     # L = np.round(L).astype(np.uint16)
 
     # apply the radiometric calibration - i.e. scale by the gain-exposure product and
@@ -70,9 +70,9 @@ def raw_image_to_radiance(meta, imageRaw):
     bitsPerPixel = meta.get_item('EXIF:BitsPerSample')
     bitDepthMax = float(2 ** bitsPerPixel)
     radianceImage = L.astype(float) / (gain * exposureTime) * a1 / bitDepthMax
+    
+    
 
-    # return both the radiance compensated image and the DN corrected image, for the
-    # sake of the tutorial and visualization
     return radianceImage.T
 
 
