@@ -7,3 +7,6 @@ final_data/
 *.ipynb
 
 *.zip
+
+*.001
+*.002
