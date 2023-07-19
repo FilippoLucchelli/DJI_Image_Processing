@@ -4,9 +4,8 @@ Dataset/
 
 final_data/
 
+examples/
+
 *.ipynb
 
 *.zip
-
-*.001
-*.002
