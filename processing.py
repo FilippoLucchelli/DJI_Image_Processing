@@ -114,7 +114,7 @@ def align_images(band, nir):
     warp_mode=cv2.MOTION_HOMOGRAPHY
     warp_matrix=np.eye(3, 3, dtype=np.float32)
 
-    criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 100, 0.0001)
+    criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 500, 0.0001)
 
     try:
         (cc, warp_matrix)=cv2.findTransformECC(grad_nir, grad_band, warp_matrix, warp_mode, criteria)
