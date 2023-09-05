@@ -34,8 +34,8 @@ def undistort(path, meta):
     #ValETime=meta.get_item("XMP:ExposureTime")/1e6
     #PCam=meta.get_item("XMP:SensorGainAdjustment")
 
-    #norm_img=(raw_img-BlackLevel)/65535
-    undistorted_img=cv2.undistort(raw_img, CameraMatrix, DistCoeff)
+    norm_img=(raw_img-BlackLevel)/65535
+    undistorted_img=cv2.undistort(norm_img, CameraMatrix, DistCoeff)
     
 
     return undistorted_img
