@@ -17,12 +17,11 @@ def undistort(path, meta):
     returns:
         np.array: undistorted image
     """
-    raw_img=plt.imread(path)
+    raw_img=cv2.imread(path, -1)
     
     #Get metadata from the picture
     BlackLevel=meta.get_item("EXIF:BlackLevel")
-    VignettingData_string=meta.get_item("XMP:VignettingData")
-    #VD=[float(VignettingData_string.split(',')[i]) for i in range(6)]
+    
     CenterX=meta.get_item("XMP:CalibratedOpticalCenterX")
     CenterY=meta.get_item("XMP:CalibratedOpticalCenterY")
     DewarpData_string=meta.get_item("XMP:DewarpData")
@@ -30,11 +29,11 @@ def undistort(path, meta):
     fx, fy, cx, cy, k1, k2, p1, p2, k3 = DD[0], DD[1], DD[2], DD[3], DD[4], DD[5], DD[6], DD[7], DD[8]
     CameraMatrix=np.array([[fx, 0, CenterX+cx], [0, fy, CenterY+cy], [0, 0, 1]])
     DistCoeff=np.array([k1, k2, p1, p2, k3])
-    #ValGain=meta.get_item("XMP:SensorGain")
-    #ValETime=meta.get_item("XMP:ExposureTime")/1e6
-    #PCam=meta.get_item("XMP:SensorGainAdjustment")
+    
 
-    norm_img=(raw_img-BlackLevel)/65535
+    raw_img[raw_img>BlackLevel]-=BlackLevel
+    norm_img=raw_img.astype(np.float32)
+    norm_img/=65535
     undistorted_img=cv2.undistort(norm_img, CameraMatrix, DistCoeff)
     
 
@@ -85,8 +84,16 @@ class VegetationIndices:
         return ndvi
     
     def compute_evi(self):
-        """ Computation of enhanced vegetation index """
-        return 2.5*(self.nir-self.red)/(self.nir+6*self.red-7.5*self.blue+1)
+        num=(self.nir-self.red)*2.5
+        den=(self.nir+6*self.red-7.5*self.blue+1)
+        den[den==0]=0.001
+
+        evi=num/den
+        evi[evi>1]=1
+        evi[evi<-1]=-1
+
+        return evi
+
     
 
 def translate_images(img, meta):
