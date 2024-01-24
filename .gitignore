@@ -1,31 +1,11 @@
 __pycache__/
 
-Dataset/
-
-DCIM/
-
-JPG/
-
-data_ref/
-
-data_no_ref/
-
-label_data/
-
 RGB/
 
-new_data/
-
-new_rgb/
-
-aer1_normal/
-
-plastic_index/
-
-final_data/
-
-examples/
+Data/
 
 *.ipynb
 
 *.zip
+
+ip.txt
