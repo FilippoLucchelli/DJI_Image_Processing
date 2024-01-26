@@ -2,8 +2,8 @@
 
 Preprocessing of images from DJI P4 Multispectral drone. 
 
--Lens distortion correction
--Bands alignment with edge detector and ECC Maximization
+- Lens distortion correction
+- Bands alignment with edge detector and ECC Maximization
 
 ## Flags
 
