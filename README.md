@@ -16,5 +16,6 @@ Preprocessing of images from DJI P4 Multispectral drone.
 - ```--equalization```: store_true. Histogram equalization before saving jpg
 - ```--veg_index```: store_true. Compute NDVI, GNDVI, and EVI
 
+## Usage
 
-
+```python3 process_images.py --source_folder path to folder --dest_folder path to folder --save_npy --save_jpg --edge sobel --scale_factor 0.8 --equalization --veg_index```
