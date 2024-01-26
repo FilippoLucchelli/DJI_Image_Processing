@@ -1,21 +1,22 @@
 import os
 import metadata
-import processing
 import cv2
 import numpy as np
 import argparse
 import utils
-import time
 import process
+import veg_index
 
 parser=argparse.ArgumentParser()
 
 parser.add_argument('--source_folder', nargs='+', help='Ex. --folder path to folder -> \\path\\to\\folder')
 parser.add_argument('--dest_folder', nargs='+', help='Ex. --folder path to folder -> \\path\\to\\folder')
-parser.add_argument('--save_npy', action='store_false', help='Save numpy array')
-parser.add_argument('--save_jpg', action='store_false', help='Save jpg image')
-parser.add_argument('--edge', default='sobel', choices=['sobel', 'canny'])
-parser.add_argument('--method', default='edge', choices=['edge', 'features'])
+parser.add_argument('--save_npy', action='store_true', help='Save numpy array')
+parser.add_argument('--save_jpg', action='store_true', help='Save jpg image')
+parser.add_argument('--edge', default='sobel', choices=['sobel', 'canny'], help='Edge detection method. Sobel with gaussian filter or canny')
+parser.add_argument('--scale_factor', default=1, type=int, help='Scale factor to speed-up processing. Final image is not resized. shape=(w*factor, h*factor)')
+parser.add_argument('--equalization', action='store_true', help='Histogram equalization before saving jpg. For visualization only.')
+parser.add_argument('--veg_index', action='store_true', help='Compute NDVI, GNDVI, and EVI')
 
 args=parser.parse_args()
 
@@ -67,6 +68,7 @@ aligned_norm={}
 
 
 for n_img, paths in enumerate(reshaped_paths):
+   
     for n, path in enumerate(paths):
         bands[band_names[n+1]]=cv2.imread(path, cv2.IMREAD_GRAYSCALE)
         metas[band_names[n+1]]=metadata.Metadata(path)
@@ -76,12 +78,9 @@ for n_img, paths in enumerate(reshaped_paths):
             aligned[key]=undistorted_bands['nir']
 
         else:
-            if args.method=='edge':
-                aligned[key]=process.align_bands_ECC(undistorted_bands[key], undistorted_bands['nir'], metas[key], info=(key, n_img), canny=canny)
-
-            elif args.method=='features':
-                aligned[key]=process.align_bands_feat(undistorted_bands[key], undistorted_bands['nir'], metas[key], info=(key, n_img))
-        
+            aligned[key]=process.align_bands_ECC(undistorted_bands[key], undistorted_bands['nir'], 
+                                                metas[key], info=(key, n_img), canny=canny, scale_factor=args.scale_factor)
+    
         aligned[key][aligned[key]>BLACK_LEVEL]-=BLACK_LEVEL
         aligned_norm[key]=(aligned[key].astype(np.float32))/65535
 
@@ -89,10 +88,26 @@ for n_img, paths in enumerate(reshaped_paths):
             np.save(os.path.join(npy_folder, f'img_{n_img:03d}_{key}'), aligned_norm[key])
 
         if args.save_jpg:
-            aligned[key]=cv2.equalizeHist(aligned[key])
+            if args.equalization:
+                aligned[key]=cv2.equalizeHist(aligned[key])
             cv2.imwrite(os.path.join(jpg_folder, f'img_{n_img:03d}_{key}.jpg'), aligned[key])
-
-
+    
+    if args.veg_index:
+            vis={}
+            vi=veg_index.VegetationIndices(aligned_norm['red'], aligned_norm['green'], aligned_norm['blue'], aligned_norm['nir'])
+            vis['ndvi']=vi.compute_ndvi()
+            vis['evi']=vi.compute_evi()
+            vis['gndvi']=vi.compute_gndvi()
+            if args.save_npy:
+                for key in vis:
+                    np.save(os.path.join(npy_folder, f'img_{n_img:03d}_{key}'), vis[key])
+            if args.save_jpg:
+                for key in vis:
+                    norm_vi=cv2.normalize(vis[key], None, 0, 255, cv2.NORM_MINMAX).astype(np.uint8)
+                    if args.equalization:
+                        norm_vi=cv2.equalizeHist(norm_vi)
+                    cv2.imwrite(os.path.join(jpg_folder, f'img_{n_img:03d}_{key}.jpg'), norm_vi)
+                    
 
 
 
