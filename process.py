@@ -17,15 +17,20 @@ def undistort(meta, img):
     return undistorted_img
 
 
-def align_bands_ECC(band, nir, meta, info, canny=False):
+def align_bands_ECC(band, nir, meta, info, canny=False, scale_factor=1):
 
+    height, width=band.shape
+    new_height=int(height*scale_factor)
+    new_width=int(width*scale_factor)
+    band_resized=cv2.resize(band, (new_width, new_height))
+    nir_resized=cv2.resize(nir, (new_width, new_height))
     if canny==True:
-        band_edges=cv2.Canny(band, 100, 200)
-        nir_edges=cv2.Canny(nir, 100, 200)
+        band_edges=cv2.Canny(band_resized, 100, 200)
+        nir_edges=cv2.Canny(nir_resized, 100, 200)
 
     else:
-        band_smooth=cv2.GaussianBlur(band, (5,5), 0)
-        nir_smooth=cv2.GaussianBlur(nir, (5,5), 0)
+        band_smooth=cv2.GaussianBlur(band_resized, (5,5), 0)
+        nir_smooth=cv2.GaussianBlur(nir_resized, (5,5), 0)
         band_edges=utils.get_gradient(band_smooth)
         nir_edges=utils.get_gradient(nir_smooth)
 
@@ -49,36 +54,4 @@ def align_bands_ECC(band, nir, meta, info, canny=False):
     return aligned_band
    
 
-def align_bands_feat(band, nir, meta, info):
-    akaze=cv2.AKAZE_create()
-    bf=cv2.BFMatcher()
 
-    kp_band, des_band=akaze.detectAndCompute(band, None)
-    kp_nir, des_nir= akaze.detectAndCompute(nir, None)
-
-    #print(type(kp_band))
-
-    matches=bf.knnMatch(des_nir, des_band, k=2)
-    print(len(matches))
-    good_matches=[]
-
-    for m,n in matches:
-        if m.distance < 0.75*n.distance:
-            good_matches.append([m])
-    print(len(good_matches))
-
-    #print(good_matches)
-    ref_matched_kpts=np.float32([kp_nir[m[0].queryIdx].pt for m in good_matches])
-    sensed_matched_kpts=np.float32([kp_band[m[0].queryIdx].pt for m in good_matches])
-
-    H, status=cv2.findHomography(sensed_matched_kpts, ref_matched_kpts, cv2.RANSAC, 5.0)
-    warped_image=cv2.warpPerspective(band, H, (band.shape[1], band.shape[0]))
-    del kp_band, des_band, kp_nir, des_nir, matches, good_matches, ref_matched_kpts, sensed_matched_kpts
-
-    return warped_image
-    
-"""  except:
-        print(f'Image number: {info[1]}, Band: {info[0]}')
-        print('Warning: find transform failed.')
-        exit()
- """
