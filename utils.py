@@ -2,14 +2,14 @@ import os
 import numpy as np
 import cv2
 
-def get_paths(folder):
+def get_paths(folder, format):
     file_names=sorted(os.listdir(folder))
-    file_paths=[os.path.join(folder, file_names[i]) for i in range(len(file_names))]
+    file_paths=[os.path.join(folder, file_names[i]) for i in range(len(file_names)) if file_names[i].endswith(format)]
     return file_paths
 
-def divide_frames(paths):
+def divide_frames(paths, n_frames):
     paths_np=np.array(paths)
-    reshaped_paths=paths_np.reshape(-1, 5)
+    reshaped_paths=paths_np.reshape(-1, n_frames)
     return reshaped_paths
 
 
