@@ -16,7 +16,6 @@ def undistort(meta, img):
 
     return undistorted_img
 
-
 def align_bands_ECC(band, nir, meta, info, canny=False, scale_factor=1):
 
     height, width=band.shape
@@ -53,5 +52,4 @@ def align_bands_ECC(band, nir, meta, info, canny=False, scale_factor=1):
     aligned_band=cv2.warpPerspective(band, warp_matrix, (band.shape[1], band.shape[0]), flags=cv2.INTER_LINEAR+cv2.WARP_INVERSE_MAP)
     return aligned_band
    
-
 
